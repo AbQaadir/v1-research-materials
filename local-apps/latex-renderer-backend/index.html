@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Registration System Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mxgraph@4.4.1/javascript/mxClient.min.js"></script>
+
+    <style>
+        body { font-family: sans-serif; }
+        #graphContainer {
+            width: 800px;
+            height: 600px;
+            border: 1px solid #ccc;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Student Registration System Database Architecture</h1>
+    <div id="graphContainer"></div>
+
+    <script type="text/javascript">
+        // Check if the mxClient library is available
+        if (typeof mxClient === 'undefined') {
+            document.body.innerHTML = 'mxGraph library is not loaded. Please check the CDN link.';
+        } else {
+            // Main function to create the graph
+            function main(container) {
+                // Checks if the browser is supported
+                if (!mxClient.isBrowserSupported()) {
+                    mxUtils.error('Browser is not supported!', 200, false);
+                } else {
+                    // Creates the graph inside the given container
+                    var graph = new mxGraph(container);
+
+                    // Enable undo/redo functionality
+                    var undoManager = new mxUndoManager();
+                    var listener = function(sender, evt) {
+                      undoManager.undoableEditHappened(evt.getProperty('edit'));
+                    };
+                    graph.getModel().addListener(mxEvent.UNDO, listener);
+                    graph.getView().addListener(mxEvent.UNDO, listener);
+                    graph.getModel().addListener(mxEvent.REDO, listener);
+                    graph.getView().addListener(mxEvent.REDO, listener);
+
+                    // Gets the default parent for inserting new cells. This is normally the container viewport.
+                    var parent = graph.getDefaultParent();
+
+                    // Function to create a vertex (node) with specific styling
+                    function createVertex(id, x, y, width, height, label, style) {
+                      var v = graph.insertVertex(parent, id, label, x, y, width, height);
+                      if (style) {
+                        v.setStyle(style);
+                      }
+                      return v;
+                    }
+
+                    // Function to create an edge (connection) between two vertices
+                    function createEdge(id, sourceId, targetId, label, style) {
+                      var source = graph.getModel().getCell(sourceId);
+                      var target = graph.getModel().getCell(targetId);
+                      if (source && target) {
+                        var e = graph.insertEdge(parent, id, label, source, target);
+                        if (style) {
+                          e.setStyle(style);
+                        }
+                        return e;
+                      }
+                      return null;
+                    }
+
+                    // Define some basic styles for the nodes
+                    var authStyle = 'rounded=1;fillColor=#dae8fc;strokeColor=#6c8ebf;strokeWidth=2;';
+                    var apiStyle = 'rounded=1;fillColor=#f8cecc;strokeColor=#b85450;strokeWidth=2;';
+                    var databaseStyle = 'ellipse;fillColor=#e6d0de;strokeColor=#a944a7;strokeWidth=2;';
+                    var cacheStyle = 'rounded=1;fillColor=#d5e8d4;strokeColor=#82b366;strokeWidth=2;';
+                    var edgeStyle = 'strokeColor=#000;strokeWidth=1;';
+
+                    // Enables rubberband selection
+                    new mxRubberband(graph);
+
+                    // Gets the default parent for inserting new cells. This is normally the container viewport.
+                    var parent = graph.getDefaultParent();
+
+                    // Adds cells to the model in a single step
+                    graph.getModel().beginUpdate();
+                    try {
+                        // Create nodes for different components with applied styles
+                        var auth = createVertex("auth", 100, 100, 120, 60, "Authentication", authStyle);
+                        var api = createVertex("api", 400, 100, 100, 60, "API Gateway", apiStyle);
+                        var database = createVertex("database", 250, 250, 150, 80, "Student Database", databaseStyle);
+                        var cache = createVertex("cache", 450, 250, 100, 60, "Redis Cache", cacheStyle);
+                        var registration = createVertex("registration", 100, 250, 150, 80, "Registration Service", 'rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;');
+                        var courseCatalog = createVertex("courseCatalog", 100, 400, 150, 80, "Course Catalog Service", 'rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;');
+                        var studentProfile = createVertex("studentProfile", 400, 400, 150, 80, "Student Profile Service", 'rounded=1;fillColor=#fff2cc;strokeColor=#d6b656;strokeWidth=2;');
+
+                        // Connect the components with labels and styles
+                        createEdge("edge1", "auth", "api", "Authenticates Requests", edgeStyle);
+                        createEdge("edge2", "api", "database", "Reads/Writes Student Data", edgeStyle);
+                        createEdge("edge3", "api", "cache", "Caches Student Data", edgeStyle + 'dashed=1;');
+                        createEdge("edge4", "api", "registration", "Handles Registration Requests", edgeStyle);
+                        createEdge("edge5", "api", "courseCatalog", "Fetches Course Information", edgeStyle);
+                        createEdge("edge6", "api", "studentProfile", "Manages Student Profiles", edgeStyle);
+                        createEdge("edge7", "registration", "database", "Updates Registration Info", edgeStyle);
+                        createEdge("edge8", "courseCatalog", "database", "Reads Course Details", edgeStyle);
+                        createEdge("edge9", "studentProfile", "database", "Manages Profile Data", edgeStyle);
+
+                    } finally {
+                        // Updates the display
+                        graph.getModel().endUpdate();
+                    }
+                }
+            };
+
+            // Get the container element
+            var container = document.getElementById('graphContainer');
+            // Call the main function to create the graph
+            main(container);
+        }
+    </script>
+</body>
+</html>
